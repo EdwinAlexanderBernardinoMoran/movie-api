@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Contracts\Genre\GenreRepositoryInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 use App\Http\Controllers\Controller;
@@ -16,12 +17,19 @@ use App\Traits\ApiResponse;
 class GenreController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * GenreController constructor.
+     */
+    public function __construct(private GenreRepositoryInterface $genreRepository)
+    {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $genres = Genre::all();
+        $genres = $this->genreRepository->all();
 
         return $this->successResponse(
             message: 'Genres retrieved successfully',
@@ -34,7 +42,7 @@ class GenreController extends Controller
      */
     public function store(StoreGenreRequest $request)
     {
-        $genre = Genre::create($request->validated());
+        $genre = $this->genreRepository->create($request->validated());
 
         return $this->successResponse(
             message: 'Genre created successfully',
@@ -59,7 +67,7 @@ class GenreController extends Controller
      */
     public function update(UpdateGenreRequest $request, Genre $genre)
     {
-        $genre->update($request->validated());
+        $genre = $this->genreRepository->update($genre, $request->validated());
 
         return $this->successResponse(
             message: 'Genre updated successfully',
@@ -72,7 +80,7 @@ class GenreController extends Controller
      */
     public function destroy(Genre $genre)
     {
-        $genre->delete();
+        $this->genreRepository->delete($genre);
 
         return $this->successResponse(
             message: 'Genre deleted successfully',
