@@ -1,4 +1,4 @@
-name: SonarQube analysis
+name: CI
 
 on:
   push:
@@ -12,18 +12,26 @@ permissions:
   pull-requests: read
 
 jobs:
-  analysis:
+  tests:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           coverage: pcov
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
 
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
@@ -34,11 +42,39 @@ jobs:
       - name: Generate key
         run: php artisan key:generate
 
+      - name: Directory permissions
+        run: chmod -R 777 storage bootstrap/cache
+
       - name: Run tests with coverage
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
         run: vendor/bin/pest --coverage-clover=coverage.xml --log-junit=junit.xml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            coverage.xml
+            junit.xml
+
+  sonarqube:
+    needs: tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: test-reports
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: sonar-${{ runner.os }}
 
       - name: SonarQube scan
         uses: SonarSource/sonarqube-scan-action@v5
