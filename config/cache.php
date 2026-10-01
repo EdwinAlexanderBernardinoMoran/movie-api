@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Str;
 
+defined('MOVIE_API_CACHE_DATA_PATH') || define('MOVIE_API_CACHE_DATA_PATH', 'framework/cache/data');
+
 return [
 
     /*
@@ -49,14 +51,14 @@ return [
 
         'file' => [
             'driver' => 'file',
-            'path' => storage_path('framework/cache/data'),
-            'lock_path' => storage_path('framework/cache/data'),
+            'path' => storage_path(MOVIE_API_CACHE_DATA_PATH),
+            'lock_path' => storage_path(MOVIE_API_CACHE_DATA_PATH),
         ],
 
         'storage' => [
             'driver' => 'storage',
             'disk' => env('CACHE_STORAGE_DISK'),
-            'path' => env('CACHE_STORAGE_PATH', 'framework/cache/data'),
+            'path' => env('CACHE_STORAGE_PATH', MOVIE_API_CACHE_DATA_PATH),
         ],
 
         'memcached' => [
