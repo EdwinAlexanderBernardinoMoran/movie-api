@@ -33,7 +33,7 @@ class GenreController extends Controller
     {
         $genres = $this->genreRepository->filter(
             filters: $request->only(['search', 'is_active']),
-            sortBy: $request->query('sortBy', 'name'),
+            sortBy: $request->query('sort_by', 'name'),
             order: $request->query('order', 'asc')
         );
 
