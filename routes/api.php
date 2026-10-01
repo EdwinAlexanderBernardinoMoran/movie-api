@@ -7,3 +7,6 @@ use App\Http\Controllers\Api\V1\HealthController;
 
 Route::get('health', HealthController::class);
 Route::apiResource('genres', GenreController::class);
+
+Route::get('genres/slug/{slug}', [GenreController::class, 'showBySlug'])->name('genres.showBySlug');
+Route::post('genres/restore/{id}', [GenreController::class, 'restore'])->name('genres.restore');

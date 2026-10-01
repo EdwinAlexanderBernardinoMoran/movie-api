@@ -13,6 +13,8 @@ use App\Http\Resources\V1\Genre\GenreResource;
 use App\Models\Genre;
 
 use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class GenreController extends Controller
 {
@@ -27,13 +29,33 @@ class GenreController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $genres = $this->genreRepository->all();
+        $genres = $this->genreRepository->filter(
+            filters: $request->only(['search', 'is_active']),
+            sortBy: $request->query('sort_by', 'name'),
+            order: $request->query('order', 'asc')
+        );
 
         return $this->successResponse(
             message: 'Genres retrieved successfully',
             data: GenreResource::collection($genres)
+        );
+    }
+
+    /**
+     * Display the specified resource by its slug.
+     *
+     * @param string $slug
+     * @return JsonResponse
+     */
+    public function showBySlug(string $slug): JsonResponse
+    {
+        $genre = $this->genreRepository->findBySlugOrFail($slug);
+
+        return $this->successResponse(
+            message: 'Genre retrieved successfully',
+            data: new GenreResource($genre)
         );
     }
 
@@ -86,6 +108,22 @@ class GenreController extends Controller
             message: 'Genre deleted successfully',
             data: null,
             statusCode: Response::HTTP_NO_CONTENT
+        );
+    }
+
+    /**
+     * Restore a soft-deleted genre by its ID.
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function restore(int $id): JsonResponse
+    {
+        $genre = $this->genreRepository->restore($id);
+
+        return $this->successResponse(
+            message: 'Genre restored successfully',
+            data: new GenreResource($genre)
         );
     }
 }
