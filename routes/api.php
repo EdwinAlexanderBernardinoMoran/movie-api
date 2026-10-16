@@ -1,16 +1,21 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
-use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\Api\V1\GenreController;
 use App\Http\Controllers\Api\V1\HealthController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('health', HealthController::class);
-Route::apiResource('genres', GenreController::class);
 
-Route::get('genres/slug/{slug}', [GenreController::class, 'showBySlug'])->name('genres.showBySlug');
-Route::post('genres/restore/{id}', [GenreController::class, 'restore'])->name('genres.restore');
+/**
+ * Protected genre routes (permissions are enforced in GenreController).
+ */
+Route::middleware('auth:api')->group(function () {
+    Route::apiResource('genres', GenreController::class);
+
+    Route::get('genres/slug/{slug}', [GenreController::class, 'showBySlug'])->name('genres.showBySlug');
+    Route::post('genres/restore/{id}', [GenreController::class, 'restore'])->name('genres.restore');
+});
 
 /**
  * Authentication routes for the API.

@@ -2,22 +2,16 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-
 use App\Http\Controllers\Controller;
-
 use App\Http\Requests\V1\User\RegisterRequest;
-
 use App\Http\Resources\V1\User\UserResource;
-
 use App\Models\User;
-
 use App\Traits\ApiResponse;
-
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
@@ -25,18 +19,16 @@ class AuthController extends Controller
 
     /**
      * Register a new user and return an access token.
-     *
-     * @param RegisterRequest $request
-     * @return JsonResponse
      */
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
-            $user = User::create($request->validated());
+            $user = User::create($request->safe()->except('role'));
+            $user->assignRole($request->validated('role', 'admin'));
 
             $token = Auth::guard('api')->login($user);
 
-            if (!$token) {
+            if (! $token) {
                 return $this->errorResponse(
                     message: 'User registration failed',
                     statusCode: Response::HTTP_INTERNAL_SERVER_ERROR
@@ -58,10 +50,6 @@ class AuthController extends Controller
 
     /**
      * Get the token payload for the authenticated user.
-     *
-     * @param User $user
-     * @param string $token
-     * @return array
      */
     public function tokenPayload(User $user, string $token): array
     {
@@ -75,9 +63,6 @@ class AuthController extends Controller
 
     /**
      * Log in an existing user and return an access token.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function login(Request $request): JsonResponse
     {
@@ -86,7 +71,7 @@ class AuthController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
-        if (!$token = Auth::guard('api')->attempt($credentials)) {
+        if (! $token = Auth::guard('api')->attempt($credentials)) {
             return $this->errorResponse(
                 message: 'Invalid credentials',
                 statusCode: Response::HTTP_UNAUTHORIZED
@@ -102,8 +87,6 @@ class AuthController extends Controller
 
     /**
      * Get the authenticated user's details.
-     *
-     * @return JsonResponse
      */
     public function me(): JsonResponse
     {
@@ -116,8 +99,6 @@ class AuthController extends Controller
 
     /**
      * Log out the authenticated user and invalidate the access token.
-     *
-     * @return JsonResponse
      */
     public function logout(): JsonResponse
     {
@@ -132,8 +113,6 @@ class AuthController extends Controller
 
     /**
      * Refresh the access token for the authenticated user.
-     *
-     * @return JsonResponse
      */
     public function refresh(): JsonResponse
     {

@@ -3,28 +3,42 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\Genre\GenreRepositoryInterface;
-use Symfony\Component\HttpFoundation\Response;
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Genre\StoreGenreRequest;
 use App\Http\Requests\V1\Genre\UpdateGenreRequest;
 use App\Http\Resources\V1\Genre\GenreResource;
-
 use App\Models\Genre;
-
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Symfony\Component\HttpFoundation\Response;
 
-class GenreController extends Controller
+class GenreController extends Controller implements HasMiddleware
 {
     use ApiResponse;
 
     /**
+     * Get the middleware that should be assigned to the controller.
+     * viewer: view | editor: view, write | admin: view, write, delete.
+     *
+     * @return array<int, Middleware>
+     */
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(PermissionMiddleware::using('view', 'api'), only: ['index', 'show', 'showBySlug']),
+            new Middleware(PermissionMiddleware::using('write', 'api'), only: ['store', 'update']),
+            new Middleware(PermissionMiddleware::using('delete', 'api'), only: ['destroy', 'restore']),
+        ];
+    }
+
+    /**
      * GenreController constructor.
      */
-    public function __construct(private GenreRepositoryInterface $genreRepository)
-    {}
+    public function __construct(private GenreRepositoryInterface $genreRepository) {}
 
     /**
      * Display a listing of the resource.
@@ -45,9 +59,6 @@ class GenreController extends Controller
 
     /**
      * Display the specified resource by its slug.
-     *
-     * @param string $slug
-     * @return JsonResponse
      */
     public function showBySlug(string $slug): JsonResponse
     {
@@ -113,9 +124,6 @@ class GenreController extends Controller
 
     /**
      * Restore a soft-deleted genre by its ID.
-     *
-     * @param int $id
-     * @return JsonResponse
      */
     public function restore(int $id): JsonResponse
     {
