@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\MovieFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,7 +11,7 @@ use Illuminate\Support\Str;
 
 class Movie extends Model
 {
-    /** @use HasFactory<\Database\Factories\MovieFactory> */
+    /** @use HasFactory<MovieFactory> */
     use HasFactory, SoftDeletes;
 
     /**
@@ -20,6 +21,7 @@ class Movie extends Model
      */
     protected $fillable = [
         'title',
+        'slug',
         'synopsis',
         'year',
         'rating',
@@ -39,7 +41,7 @@ class Movie extends Model
         'rating' => 'decimal:1',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     /**

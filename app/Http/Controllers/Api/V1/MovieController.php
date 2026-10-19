@@ -2,23 +2,21 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Illuminate\Http\Request;
-
 use App\Contracts\Movie\MovieRepositoryInterface;
-
-use App\Models\Movie;
-
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Movie\StoreMovieRequest;
+use App\Http\Requests\V1\Movie\UpdateMovieRequest;
 use App\Http\Resources\V1\Movie\MovieResource;
-
+use App\Models\Movie;
 use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class MovieController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(private MovieRepositoryInterface $movieRepository)
-    {}
+    public function __construct(private MovieRepositoryInterface $movieRepository) {}
 
     /**
      * Display a listing of the resource.
@@ -40,25 +38,54 @@ class MovieController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreMovieRequest $request)
     {
-        //
+        $movie = $this->movieRepository->create($request->safe()->except('genre_ids'));
+
+        if ($request->has('genre_ids')) {
+            $this->movieRepository->syncGenres($movie, $request->input('genre_ids'));
+        }
+
+        $movie->load('genres');
+
+        return $this->successResponse(
+            message: 'Movie created successfully',
+            data: new MovieResource($movie),
+            statusCode: Response::HTTP_CREATED
+        );
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Movie $movie)
+    public function show(string $movie)
     {
-        //
+        $movie = $this->movieRepository->findOrFail($movie);
+        $movie->load('genres');
+
+        return $this->successResponse(
+            message: 'Movie retrieved successfully',
+            data: new MovieResource($movie)
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Movie $movie)
+    public function update(UpdateMovieRequest $request, Movie $movie)
     {
-        //
+        $movie = $this->movieRepository->update($movie, $request->safe()->except('genre_ids'));
+
+        if ($request->has('genre_ids')) {
+            $this->movieRepository->syncGenres($movie, $request->input('genre_ids'));
+        }
+
+        $movie->load('genres');
+
+        return $this->successResponse(
+            message: 'Movie updated successfully',
+            data: new MovieResource($movie)
+        );
     }
 
     /**
@@ -66,6 +93,8 @@ class MovieController extends Controller
      */
     public function destroy(Movie $movie)
     {
-        //
+        $this->movieRepository->delete($movie);
+
+        return response()->noContent();
     }
 }

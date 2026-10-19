@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Genre;
 use App\Models\Movie;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class MovieSeeder extends Seeder
 {
@@ -46,7 +46,10 @@ class MovieSeeder extends Seeder
             $genres = $movieData['genres'];
             unset($movieData['genres']);
 
-            $movie = Movie::firstOrCreate(['title' => $movieData['title']], $movieData);
+            $movie = Movie::firstOrCreate(
+                ['title' => $movieData['title']],
+                $movieData + ['slug' => Str::slug($movieData['title'])]
+            );
             $genreIds = Genre::whereIn('name', $genres)->pluck('id');
 
             $movie->genres()->sync($genreIds);
