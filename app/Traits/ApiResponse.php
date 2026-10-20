@@ -19,7 +19,7 @@ trait ApiResponse
     /**
      * Return an error response.
      */
-    protected function errorResponse(string $message, int $statusCode, mixed $errors): \Illuminate\Http\JsonResponse
+    protected function errorResponse(string $message, int $statusCode, mixed $errors = null): \Illuminate\Http\JsonResponse
     {
         $payload = ['message' => $message];
 
