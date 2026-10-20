@@ -14,7 +14,7 @@ test('create user and returns token on register', function () {
         'name' => 'Test User',
         'email' => TEST_EMAIL,
         'password' => TEST_PASSWORD,
-        'password_confirmation' => TEST_PASSWORD
+        'password_confirmation' => TEST_PASSWORD,
     ];
 
     $response = $this->post(REGISTER_ENDPOINT, $payload);
@@ -25,8 +25,8 @@ test('create user and returns token on register', function () {
                 'access_token',
                 'token_type',
                 'expires_in',
-                'user'
-            ]
+                'user',
+            ],
         ])
         ->assertJsonPath('data.user.email', TEST_EMAIL);
 });
@@ -36,7 +36,7 @@ test('does not expose password on register', function () {
         'name' => 'Test User',
         'email' => TEST_EMAIL,
         'password' => TEST_PASSWORD,
-        'password_confirmation' => TEST_PASSWORD
+        'password_confirmation' => TEST_PASSWORD,
     ];
 
     $response = $this->post(REGISTER_ENDPOINT, $payload);
@@ -55,12 +55,12 @@ test('returns token for valid credentials on login', function () {
 
     User::factory()->create([
         'email' => TEST_EMAIL,
-        'password' => bcrypt(TEST_PASSWORD)
+        'password' => bcrypt(TEST_PASSWORD),
     ]);
 
     $response = $this->post('/api/auth/login', [
         'email' => TEST_EMAIL,
-        'password' => TEST_PASSWORD
+        'password' => TEST_PASSWORD,
     ]);
 
     $response->assertStatus(200)
@@ -69,15 +69,15 @@ test('returns token for valid credentials on login', function () {
                 'access_token',
                 'token_type',
                 'expires_in',
-                'user'
-            ]
+                'user',
+            ],
         ]);
 });
 
 test('returns user with valid token on me', function () {
     $user = User::factory()->create([
         'email' => TEST_EMAIL,
-        'password' => bcrypt(TEST_PASSWORD)
+        'password' => bcrypt(TEST_PASSWORD),
     ]);
 
     $this->actingAs($user, 'api')
@@ -89,10 +89,51 @@ test('returns user with valid token on me', function () {
 test('succeeds with valid token on logout', function () {
     $user = User::factory()->create([
         'email' => TEST_EMAIL,
-        'password' => bcrypt(TEST_PASSWORD)
+        'password' => bcrypt(TEST_PASSWORD),
     ]);
 
     $this->actingAs($user, 'api')
         ->postJson('/api/auth/logout')
         ->assertStatus(200);
+});
+
+test('returns 401 for invalid credentials on login', function () {
+    User::factory()->create([
+        'email' => TEST_EMAIL,
+        'password' => bcrypt(TEST_PASSWORD),
+    ]);
+
+    $this->postJson('/api/auth/login', [
+        'email' => TEST_EMAIL,
+        'password' => 'wrong-password',
+    ])
+        ->assertStatus(401)
+        ->assertJsonPath('message', 'Invalid credentials');
+});
+
+test('requires payload on login', function () {
+    $this->postJson('/api/auth/login', [])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['email', 'password']);
+});
+
+test('returns 401 without token on me', function () {
+    $this->getJson('/api/auth/me')->assertStatus(401);
+});
+
+test('returns new token with valid token on refresh', function () {
+    User::factory()->create([
+        'email' => TEST_EMAIL,
+        'password' => bcrypt(TEST_PASSWORD),
+    ]);
+
+    $token = $this->postJson('/api/auth/login', [
+        'email' => TEST_EMAIL,
+        'password' => TEST_PASSWORD,
+    ])->json('data.access_token');
+
+    $this->withToken($token)
+        ->postJson('/api/auth/refresh')
+        ->assertStatus(200)
+        ->assertJsonStructure(['data' => ['access_token', 'token_type', 'expires_in', 'user']]);
 });
