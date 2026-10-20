@@ -1,6 +1,6 @@
 <?php
-use App\Models\Genre;
 
+use App\Models\Genre;
 use App\Models\Movie;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -126,4 +126,44 @@ it('validates genre_ids exist on store', function () {
     $response->assertUnprocessable()
         ->assertJsonPath('message', 'The selected genre_ids.0 is invalid.')
         ->assertJsonValidationErrors('genre_ids.0');
+});
+
+it('filters movies by year', function () {
+    Movie::factory()->create(['year' => 2010]);
+    Movie::factory()->create(['year' => 1999]);
+
+    $this->getJson('/api/movies?year=2010')
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.year', 2010);
+});
+
+it('filters movies by minimum rating', function () {
+    Movie::factory()->create(['rating' => 9.0]);
+    Movie::factory()->create(['rating' => 5.0]);
+
+    $this->getJson('/api/movies?min_rating=8')
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data');
+});
+
+it('filters movies by genre', function () {
+    $genre = Genre::factory()->create();
+    $movie = Movie::factory()->create();
+    Movie::factory()->create();
+    $movie->genres()->attach($genre);
+
+    $this->getJson("/api/movies?genre_id={$genre->id}")
+        ->assertStatus(200)
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $movie->id);
+});
+
+it('sorts movies by rating descending', function () {
+    Movie::factory()->create(['rating' => 3.0]);
+    $best = Movie::factory()->create(['rating' => 9.0]);
+
+    $this->getJson('/api/movies?sort_by=rating&order=desc')
+        ->assertStatus(200)
+        ->assertJsonPath('data.0.id', $best->id);
 });
