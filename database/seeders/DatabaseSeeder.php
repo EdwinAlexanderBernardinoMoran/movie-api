@@ -4,8 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Database\Seeders\GenreSeeder;
-use Database\Seeders\MovieSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,6 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            UserSeeder::class,
             GenreSeeder::class,
             MovieSeeder::class,
         ]);
