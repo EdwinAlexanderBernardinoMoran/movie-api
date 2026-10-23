@@ -32,7 +32,7 @@ it('creates a movie with auto slug on store', function () {
         'is_active' => true,
     ];
 
-    $response = $this->postJson('/api/movies', $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/movies', $payload);
 
     $response->assertStatus(201)
         ->assertJsonPath('data.title', $payload['title'])
@@ -57,7 +57,7 @@ it('updates a movie on put', function () {
         'is_active' => true,
     ];
 
-    $response = $this->putJson("/api/movies/{$movie->id}", $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->putJson("/api/movies/{$movie->id}", $payload);
 
     $response->assertStatus(200)
         ->assertJsonPath('data.title', $payload['title'])
@@ -73,7 +73,7 @@ it('updates a movie on put', function () {
 it('deletes a movie on delete', function () {
     $movie = Movie::factory()->create();
 
-    $response = $this->deleteJson("/api/movies/{$movie->id}");
+    $response = $this->actingAs(userRole('admin'), 'api')->deleteJson("/api/movies/{$movie->id}");
 
     $response->assertStatus(204);
 
@@ -98,7 +98,7 @@ it('syncs genres when provided on store', function () {
         'genre_ids' => $genres->pluck('id')->toArray(),
     ];
 
-    $response = $this->postJson('/api/movies', $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/movies', $payload);
     $response->assertCreated();
 
     $movie = Movie::latest()->first();
@@ -121,7 +121,7 @@ it('validates genre_ids exist on store', function () {
         'genre_ids' => [999], // Non-existent genre ID
     ];
 
-    $response = $this->postJson('/api/movies', $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/movies', $payload);
 
     $response->assertUnprocessable()
         ->assertJsonPath('message', 'The selected genre_ids.0 is invalid.')

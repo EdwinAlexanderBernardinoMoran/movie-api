@@ -1,9 +1,17 @@
 <?php
 
 use App\Models\Genre;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+if (! function_exists('userRole')) {
+    function userRole(string $role): User
+    {
+        return User::factory()->create(['role' => $role]);
+    }
+}
 
 it('return all genres', function () {
     Genre::factory()->count(5)->create();
@@ -29,7 +37,7 @@ it('return a single genre on show', function () {
 it('creates a genre with auto slug on store', function () {
     $payload = ['name' => 'Comedia', 'description' => 'Gênero de comédia'];
 
-    $response = $this->postJson('/api/genres', $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/genres', $payload);
 
     $response->assertStatus(201)
         ->assertJsonPath('data.name', $payload['name'])
@@ -45,7 +53,7 @@ it('updates a genre on put', function () {
     $genre = Genre::factory()->create();
     $payload = ['name' => 'Terror', 'description' => 'Gênero de terror'];
 
-    $response = $this->putJson("/api/genres/{$genre->id}", $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->putJson("/api/genres/{$genre->id}", $payload);
 
     $response->assertStatus(200)
         ->assertJsonPath('data.name', $payload['name'])
@@ -61,7 +69,7 @@ it('updates a genre on put', function () {
 it('deletes a genre on delete', function () {
     $genre = Genre::factory()->create();
 
-    $response = $this->deleteJson("/api/genres/{$genre->id}");
+    $response = $this->actingAs(userRole('admin'), 'api')->deleteJson("/api/genres/{$genre->id}");
 
     $response->assertStatus(204);
 
