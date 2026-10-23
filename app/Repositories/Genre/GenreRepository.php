@@ -2,11 +2,13 @@
 
 namespace App\Repositories\Genre;
 
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+
 use App\Contracts\Genre\GenreRepositoryInterface;
 use App\Repositories\Eloquent\BaseRepository;
 use App\Models\Genre;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 
 class GenreRepository extends BaseRepository implements GenreRepositoryInterface
 {
@@ -32,7 +34,10 @@ class GenreRepository extends BaseRepository implements GenreRepositoryInterface
         $sortBy = in_array($sortBy, self::SORTABLE) ? $sortBy : 'name';
         $order = strtolower($order) === 'desc' ? 'desc' : 'asc';
 
-        return $this->model->query()
+        $key = 'genres.index.' . hash('sha256', serialize(compact('filters', 'sortBy', 'order')));
+
+        $genresJson = Cache::remember($key, now()->addMinutes(60), function () use ($filters, $sortBy, $order) {
+            return $this->model->query()
             ->when(isset($filters['search']),
                 fn($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($filters['search']) . '%'])
             )
@@ -40,7 +45,11 @@ class GenreRepository extends BaseRepository implements GenreRepositoryInterface
                 fn($q) => $q->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN))
             )
             ->orderBy($sortBy, $order)
-            ->get();
+            ->get()
+            ->toJson();
+        });
+
+        return Genre::hydrate(json_decode($genresJson, true));
     }
 
     /**
