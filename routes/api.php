@@ -1,10 +1,12 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\GenreController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MovieController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\PosterController;
 
 $genreRoute = 'genres/{genre}';
 $movieRoute = 'movies/{movie}';
@@ -60,6 +62,7 @@ Route::prefix('v1')->group(function () use ($genreRoute, $movieRoute) {
             Route::post('movies', [MovieController::class, 'store'])->name('movies.store');
             Route::put($movieRoute, [MovieController::class, 'update'])->name('movies.update');
             Route::patch($movieRoute, [MovieController::class, 'update'])->name('movies.patch');
+            Route::post('movies/{movie}/poster', [PosterController::class, 'store'])->name('movies.poster.store');
         });
 
         Route::middleware('role:admin')->group(function () use ($movieRoute) {
