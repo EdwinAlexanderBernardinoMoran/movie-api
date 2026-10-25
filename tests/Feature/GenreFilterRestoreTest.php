@@ -9,7 +9,7 @@ it('filters genres by search text', function () {
     Genre::factory()->create(['name' => 'Action']);
     Genre::factory()->create(['name' => 'Comedy']);
 
-    $response = $this->get('/api/genres?search=act');
+    $response = $this->get('/api/v1/genres?search=act');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -20,7 +20,7 @@ it('filters genres by is_active status', function () {
     Genre::factory()->create(['name' => 'Action', 'is_active' => true]);
     Genre::factory()->create(['name' => 'Comedy', 'is_active' => false]);
 
-    $response = $this->get('/api/genres?is_active=false');
+    $response = $this->get('/api/v1/genres?is_active=false');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -31,7 +31,7 @@ it('orders genres by name in descending order', function () {
     Genre::factory()->create(['name' => 'Action']);
     Genre::factory()->create(['name' => 'Comedy']);
 
-    $response = $this->get('/api/genres?sort_by=name&order=desc');
+    $response = $this->get('/api/v1/genres?sort_by=name&order=desc');
     $names = collect($response->json('data'))->pluck('name')->values()->all();
 
     expect($names)->toEqual(['Comedy', 'Action']);
@@ -44,7 +44,7 @@ it('ignores an invalid sort column', function () {
     Genre::factory()->create(['name' => 'Action']);
     Genre::factory()->create(['name' => 'Comedy']);
 
-    $response = $this->get('/api/genres?sort_by=password');
+    $response = $this->get('/api/v1/genres?sort_by=password');
     $names = collect($response->json('data'))->pluck('name')->values()->all();
 
     expect($names)->toEqual(['Action', 'Comedy']);
@@ -56,7 +56,7 @@ it('ignores an invalid sort column', function () {
 it('returns the correct genre by slug', function () {
     Genre::factory()->create(['name' => 'Action', 'slug' => 'action']);
 
-    $response = $this->getJson("/api/genres/slug/action");
+    $response = $this->getJson('/api/v1/genres/slug/action');
 
     $response->assertStatus(200)
         ->assertJsonPath('data.slug', 'action');
@@ -68,7 +68,7 @@ it('restores a soft-deleted genre', function () {
 
     $this->assertSoftDeleted($genre, ['id' => $genre->id]);
 
-    $response = $this->actingAs(userRole('admin'), 'api')->postJson("/api/genres/restore/{$genre->id}");
+    $response = $this->actingAs(userRole('admin'), 'api')->postJson("/api/v1/genres/restore/{$genre->id}");
 
     $response->assertStatus(200)
         ->assertJsonPath('data.name', 'Action');

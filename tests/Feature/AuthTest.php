@@ -7,7 +7,7 @@ uses(RefreshDatabase::class);
 
 const TEST_EMAIL = 'test@example.com';
 const TEST_PASSWORD = 'password@2026';
-const REGISTER_ENDPOINT = '/api/auth/register';
+const REGISTER_ENDPOINT = '/api/v1/auth/register';
 
 test('create user and returns token on register', function () {
     $payload = [
@@ -58,7 +58,7 @@ test('returns token for valid credentials on login', function () {
         'password' => bcrypt(TEST_PASSWORD),
     ]);
 
-    $response = $this->post('/api/auth/login', [
+    $response = $this->post('/api/v1/auth/login', [
         'email' => TEST_EMAIL,
         'password' => TEST_PASSWORD,
     ]);
@@ -81,7 +81,7 @@ test('returns user with valid token on me', function () {
     ]);
 
     $this->actingAs($user, 'api')
-        ->get('/api/auth/me')
+        ->get('/api/v1/auth/me')
         ->assertStatus(200)
         ->assertJsonPath('data.email', TEST_EMAIL);
 });
@@ -93,7 +93,7 @@ test('succeeds with valid token on logout', function () {
     ]);
 
     $this->actingAs($user, 'api')
-        ->postJson('/api/auth/logout')
+        ->postJson('/api/v1/auth/logout')
         ->assertStatus(200);
 });
 
@@ -103,7 +103,7 @@ test('returns 401 for invalid credentials on login', function () {
         'password' => bcrypt(TEST_PASSWORD),
     ]);
 
-    $this->postJson('/api/auth/login', [
+    $this->postJson('/api/v1/auth/login', [
         'email' => TEST_EMAIL,
         'password' => 'wrong-password',
     ])
@@ -112,13 +112,13 @@ test('returns 401 for invalid credentials on login', function () {
 });
 
 test('requires payload on login', function () {
-    $this->postJson('/api/auth/login', [])
+    $this->postJson('/api/v1/auth/login', [])
         ->assertStatus(422)
         ->assertJsonValidationErrors(['email', 'password']);
 });
 
 test('returns 401 without token on me', function () {
-    $this->getJson('/api/auth/me')->assertStatus(401);
+    $this->getJson('/api/v1/auth/me')->assertStatus(401);
 });
 
 test('returns new token with valid token on refresh', function () {
@@ -127,13 +127,13 @@ test('returns new token with valid token on refresh', function () {
         'password' => bcrypt(TEST_PASSWORD),
     ]);
 
-    $token = $this->postJson('/api/auth/login', [
+    $token = $this->postJson('/api/v1/auth/login', [
         'email' => TEST_EMAIL,
         'password' => TEST_PASSWORD,
     ])->json('data.access_token');
 
     $this->withToken($token)
-        ->postJson('/api/auth/refresh')
+        ->postJson('/api/v1/auth/refresh')
         ->assertStatus(200)
         ->assertJsonStructure(['data' => ['access_token', 'token_type', 'expires_in', 'user']]);
 });

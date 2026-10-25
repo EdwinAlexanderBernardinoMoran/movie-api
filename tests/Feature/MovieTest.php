@@ -8,14 +8,14 @@ uses(RefreshDatabase::class);
 
 it('return all genres', function () {
     Movie::factory()->count(5)->create();
-    $response = $this->get('/api/movies');
+    $response = $this->get('/api/v1/movies');
 
     $response->assertStatus(200)->assertJsonCount(5, 'data');
 });
 
 it('return a single movie', function () {
     $movie = Movie::factory()->create();
-    $response = $this->get("/api/movies/{$movie->id}");
+    $response = $this->get("/api/v1/movies/{$movie->id}");
 
     $response->assertStatus(200)->assertJsonPath('data.id', $movie->id);
 });
@@ -32,7 +32,7 @@ it('creates a movie with auto slug on store', function () {
         'is_active' => true,
     ];
 
-    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/movies', $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/v1/movies', $payload);
 
     $response->assertStatus(201)
         ->assertJsonPath('data.title', $payload['title'])
@@ -57,7 +57,7 @@ it('updates a movie on put', function () {
         'is_active' => true,
     ];
 
-    $response = $this->actingAs(userRole('editor'), 'api')->putJson("/api/movies/{$movie->id}", $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->putJson("/api/v1/movies/{$movie->id}", $payload);
 
     $response->assertStatus(200)
         ->assertJsonPath('data.title', $payload['title'])
@@ -73,7 +73,7 @@ it('updates a movie on put', function () {
 it('deletes a movie on delete', function () {
     $movie = Movie::factory()->create();
 
-    $response = $this->actingAs(userRole('admin'), 'api')->deleteJson("/api/movies/{$movie->id}");
+    $response = $this->actingAs(userRole('admin'), 'api')->deleteJson("/api/v1/movies/{$movie->id}");
 
     $response->assertStatus(204);
 
@@ -98,7 +98,7 @@ it('syncs genres when provided on store', function () {
         'genre_ids' => $genres->pluck('id')->toArray(),
     ];
 
-    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/movies', $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/v1/movies', $payload);
     $response->assertCreated();
 
     $movie = Movie::latest()->first();
@@ -121,7 +121,7 @@ it('validates genre_ids exist on store', function () {
         'genre_ids' => [999], // Non-existent genre ID
     ];
 
-    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/movies', $payload);
+    $response = $this->actingAs(userRole('editor'), 'api')->postJson('/api/v1/movies', $payload);
 
     $response->assertUnprocessable()
         ->assertJsonPath('message', 'The selected genre_ids.0 is invalid.')
@@ -132,7 +132,7 @@ it('filters movies by year', function () {
     Movie::factory()->create(['year' => 2010]);
     Movie::factory()->create(['year' => 1999]);
 
-    $this->getJson('/api/movies?year=2010')
+    $this->getJson('/api/v1/movies?year=2010')
         ->assertStatus(200)
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.year', 2010);
@@ -142,7 +142,7 @@ it('filters movies by minimum rating', function () {
     Movie::factory()->create(['rating' => 9.0]);
     Movie::factory()->create(['rating' => 5.0]);
 
-    $this->getJson('/api/movies?min_rating=8')
+    $this->getJson('/api/v1/movies?min_rating=8')
         ->assertStatus(200)
         ->assertJsonCount(1, 'data');
 });
@@ -153,7 +153,7 @@ it('filters movies by genre', function () {
     Movie::factory()->create();
     $movie->genres()->attach($genre);
 
-    $this->getJson("/api/movies?genre_id={$genre->id}")
+    $this->getJson("/api/v1/movies?genre_id={$genre->id}")
         ->assertStatus(200)
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $movie->id);
@@ -163,7 +163,7 @@ it('sorts movies by rating descending', function () {
     Movie::factory()->create(['rating' => 3.0]);
     $best = Movie::factory()->create(['rating' => 9.0]);
 
-    $this->getJson('/api/movies?sort_by=rating&order=desc')
+    $this->getJson('/api/v1/movies?sort_by=rating&order=desc')
         ->assertStatus(200)
         ->assertJsonPath('data.0.id', $best->id);
 });
