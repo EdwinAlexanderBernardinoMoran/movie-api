@@ -2,10 +2,9 @@
 
 namespace App\Contracts\Movie;
 
-use Illuminate\Database\Eloquent\Collection;
-
 use App\Contracts\BaseRepositoryInterface;
 use App\Models\Movie;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 interface MovieRepositoryInterface extends BaseRepositoryInterface
 {
@@ -15,9 +14,10 @@ interface MovieRepositoryInterface extends BaseRepositoryInterface
      * @param array $filters
      * @param string $sortBy
      * @param string $order
-     * @return Collection
+     * @param int $perPage
+     * @return LengthAwarePaginator
      */
-    public function filter(array $filters, string $sortBy = 'title', string $order = 'asc'): Collection;
+    public function filter(array $filters, string $sortBy = 'title', string $order = 'asc', int $perPage = 15): LengthAwarePaginator;
 
     /**
      * Sync the genres for the given movie.
