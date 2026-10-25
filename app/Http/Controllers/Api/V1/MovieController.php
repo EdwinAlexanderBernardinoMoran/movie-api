@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
 use App\Contracts\Movie\MovieRepositoryInterface;
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Movie\StoreMovieRequest;
 use App\Http\Requests\V1\Movie\UpdateMovieRequest;
 use App\Http\Resources\V1\Movie\MovieResource;
+
 use App\Models\Movie;
 use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class MovieController extends Controller
 {
@@ -26,13 +29,11 @@ class MovieController extends Controller
         $movies = $this->movieRepository->filter(
             filters: $request->only(['search', 'year', 'min_rating', 'genre_id']),
             sortBy: $request->input('sort_by', 'title'),
-            order: $request->input('order', 'asc')
+            order: $request->input('order', 'asc'),
+            perPage: max(1, min(50, $request->input('perPage', 15)))
         );
 
-        return $this->successResponse(
-            message: 'Movies retrieved successfully',
-            data: MovieResource::collection($movies)
-        );
+        return MovieResource::collection($movies);
     }
 
     /**
