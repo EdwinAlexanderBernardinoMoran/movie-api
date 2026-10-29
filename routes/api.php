@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AIController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\V1\AuthController;
@@ -63,10 +64,13 @@ Route::prefix('v1')->group(function () use ($genreRoute, $movieRoute) {
             Route::put($movieRoute, [MovieController::class, 'update'])->name('movies.update');
             Route::patch($movieRoute, [MovieController::class, 'update'])->name('movies.patch');
             Route::post('movies/{movie}/poster', [PosterController::class, 'store'])->name('movies.poster.store');
+            Route::post('movies/{movie}/generate-synopsis', [AIController::class, 'generateSynopsis'])->name('movies.generateSynopsis');
         });
 
         Route::middleware('role:admin')->group(function () use ($movieRoute) {
             Route::delete($movieRoute, [MovieController::class, 'destroy'])->name('movies.destroy');
         });
+
+        Route::post('ai/recommendations', [AIController::class, 'recommendations'])->name('ai.recommendations');
     });
 });
