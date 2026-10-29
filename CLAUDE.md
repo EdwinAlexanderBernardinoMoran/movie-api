@@ -101,14 +101,9 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 # Test Enforcement
 
-<<<<<<< HEAD
 - Add or update tests for behavior and logic changes when a test provides meaningful regression coverage.
 - Pure copy, styling, and layout-only changes do not require new or updated tests.
 - When test coverage applies, run the affected tests and ensure they pass.
-=======
-- Test every code change by adding or updating a test.
-- Run the affected tests and ensure they pass.
->>>>>>> develop
 - Test the changed behavior and its important failure modes, but do not add tests beyond them.
 - Read the `testing-best-practices` skill before writing tests.
 
