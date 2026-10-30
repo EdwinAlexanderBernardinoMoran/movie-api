@@ -51,9 +51,10 @@ class MovieSeeder extends Seeder
             $genres = $movieData['genres'];
             unset($movieData['genres']);
 
+            $movieData['slug'] = Str::slug($movieData['title']);
             $movie = Movie::firstOrCreate(
                 ['title' => $movieData['title']],
-                $movieData + ['slug' => Str::slug($movieData['title'])]
+                $movieData
             );
             $genreIds = Genre::whereIn('name', $genres)->pluck('id');
 
